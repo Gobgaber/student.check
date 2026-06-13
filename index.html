@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Attendance System</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+
+body{
+background:#f4f7ff;
+padding:20px;
+}
+
+.card{
+border:none;
+border-radius:20px;
+box-shadow:0 10px 30px rgba(0,0,0,.08);
+}
+
+.title{
+font-size:28px;
+font-weight:700;
+color:#4f46e5;
+}
+
+.present{
+background:#22c55e;
+color:white;
+}
+
+.absent{
+background:#ef4444;
+color:white;
+}
+
+.stat{
+font-size:18px;
+margin-bottom:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="text-center mb-4">
+
+<div class="title">
+📚 Student Attendance
+</div>
+
+</div>
+
+<div class="card p-4 mb-4">
+
+<h4>Add Student</h4>
+
+<div class="input-group">
+
+<input
+id="studentName"
+class="form-control"
+placeholder="Student Name">
+
+<button
+class="btn btn-primary"
+onclick="addStudent()">
+
+Add
+
+</button>
+
+</div>
+
+</div>
+
+<div class="card p-4 mb-4">
+
+<h4>Students</h4>
+
+<div id="studentList"></div>
+
+</div>
+
+<div class="card p-4">
+
+<h4>Statistics</h4>
+
+<div id="stats"></div>
+
+<button
+class="btn btn-success mt-3"
+onclick="exportExcel()">
+
+Export Excel
+
+</button>
+
+</div>
+
+</div>
+
+<script>
+
+const API =
+"https://YOUR_SCRIPT_URL";
+
+async function addStudent(){
+
+const name =
+document.getElementById(
+"studentName"
+).value;
+
+await fetch(API,{
+method:"POST",
+body:JSON.stringify({
+action:"addStudent",
+name
+})
+});
+
+loadStudents();
+
+}
+
+async function loadStudents(){
+
+const res =
+await fetch(
+API + "?action=students"
+);
+
+const data =
+await res.json();
+
+let html="";
+
+data.forEach(student=>{
+
+html+=`
+
+<div class="border rounded p-3 mb-2">
+
+<b>${student.name}</b>
+
+<div class="mt-2">
+
+<button
+class="btn present"
+onclick="attendance(
+'${student.id}',
+'${student.name}',
+'Present'
+)">
+Present
+</button>
+
+<button
+class="btn absent"
+onclick="attendance(
+'${student.id}',
+'${student.name}',
+'Absent'
+)">
+Absent
+</button>
+
+</div>
+
+</div>
+
+`;
+
+});
+
+document.getElementById(
+"studentList"
+).innerHTML=html;
+
+}
+
+async function attendance(
+id,
+name,
+status
+){
+
+await fetch(API,{
+method:"POST",
+body:JSON.stringify({
+action:"attendance",
+id,
+name,
+status
+})
+});
+
+alert("Saved");
+
+loadStats();
+
+}
+
+async function loadStats(){
+
+const res =
+await fetch(
+API+"?action=stats"
+);
+
+const data =
+await res.json();
+
+let html="";
+
+Object.keys(data).forEach(name=>{
+
+html+=`
+
+<div class="stat">
+
+<b>${name}</b>
+
+<br>
+
+✅ Present:
+${data[name].present}
+
+|
+
+❌ Absent:
+${data[name].absent}
+
+</div>
+
+`;
+
+});
+
+document.getElementById(
+"stats"
+).innerHTML=html;
+
+}
+
+function exportExcel(){
+
+window.open(
+"https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/export?format=xlsx"
+);
+
+}
+
+loadStudents();
+loadStats();
+
+</script>
+
+</body>
+</html>
